@@ -276,7 +276,6 @@ async function precomputeSkeletons() {
   console.log("🚀 Triggered precompute");
   const frameInterval = 0.1; // every 0.1 seconds
   const frames = [];
-  const originalOnSeeked = videoPlayer.onseeked;
 
   for (let t = 0; t <= videoPlayer.duration; t += frameInterval) {
     frames.push(t);
@@ -336,7 +335,12 @@ async function precomputeSkeletons() {
     "✅ Poses precomputed! Ready to pick frames.";
 
   skeletonActive = true;
-  videoPlayer.onseeked = originalOnSeeked;
+
+  videoPlayer.onseeked = () => {
+    if (skeletonActive) {
+      captureFrameAndAnalyze();
+    }
+  };
 }
 
 function maybeDrawSkeletonOnCanvas(landmarks) {
