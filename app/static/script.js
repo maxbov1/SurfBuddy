@@ -13,14 +13,14 @@ const videoPlayer = document.getElementById("videoPlayer");
 selectFrameBtn.disabled = true;
 frameSlider.disabled = true;
 window.onload = () => {
-  fetch('/reference')
-    .then(response => response.json())
-    .then(data => {
+  fetch("/reference")
+    .then((response) => response.json())
+    .then((data) => {
       referenceData = data;
       const maneuverContainer = document.getElementById("maneuverCards");
       const techniqueContainer = document.getElementById("techniqueCards");
 
-      referenceData.forEach(ref => {
+      referenceData.forEach((ref) => {
         const card = document.createElement("div");
         card.className = "card";
         card.innerText = ref.name;
@@ -34,26 +34,26 @@ window.onload = () => {
       });
     });
   frameSlider.addEventListener("input", () => {
-  if (videoPlayer.duration > 0) {
-    videoPlayer.currentTime = frameSlider.value;
+    if (videoPlayer.duration > 0) {
+      videoPlayer.currentTime = frameSlider.value;
+      if (skeletonActive) {
+        captureFrameAndAnalyze();
+      }
+    }
+  });
+
+  videoPlayer.addEventListener("timeupdate", () => {
     if (skeletonActive) {
       captureFrameAndAnalyze();
     }
-  }
-});
-
-videoPlayer.addEventListener("timeupdate", () => {
-  if (skeletonActive) {
-    captureFrameAndAnalyze();
-  }
-});
+  });
 };
 
 function selectReference(name, cardElement) {
   selectedReferenceName = name; // ✅ Save selected maneuver/technique
-  const maneuverObj = referenceData.find(ref => ref.name === name);
+  const maneuverObj = referenceData.find((ref) => ref.name === name);
   if (!maneuverObj) {
-    console.error('❌ Selected reference not found:', name);
+    console.error("❌ Selected reference not found:", name);
     return;
   }
   stages = maneuverObj.frames || [];
@@ -70,10 +70,12 @@ function selectReference(name, cardElement) {
   activeCard.style.fontWeight = "bold";
 
   if (stages.length) {
-    document.getElementById("currentStageLabel").innerText = `Stage: ${stages[currentStageIndex]}`;
-    console.log('✅ Selected:', name, 'Stages:', stages);
+    document.getElementById("currentStageLabel").innerText =
+      `Stage: ${stages[currentStageIndex]}`;
+    console.log("✅ Selected:", name, "Stages:", stages);
   } else {
-    document.getElementById("currentStageLabel").innerText = "⚠️ No stages defined.";
+    document.getElementById("currentStageLabel").innerText =
+      "⚠️ No stages defined.";
   }
 }
 
@@ -87,24 +89,25 @@ function uploadVideo() {
 
   fetch("/upload", {
     method: "POST",
-    body: formData
+    body: formData,
   })
-  .then(response => response.json())
-  .then(data => {
-    uploadedFilename = data.filename.split('.')[0] + "_frames";
-    document.getElementById("status").innerText = "✅ Video uploaded! Ready to pick frames.";
-    videoPlayer.src = URL.createObjectURL(file);
-    videoPlayer.onloadedmetadata = () => {
-      frameSlider.max = videoPlayer.duration;  
-      frameSlider.step = 0.01;
-      frameSlider.value = 0;
-      precomputeSkeletons();
-    };
-  })
-  .catch(err => {
-    document.getElementById("status").innerText = "❌ Upload failed.";
-    console.error(err);
-  });
+    .then((response) => response.json())
+    .then((data) => {
+      uploadedFilename = data.filename.split(".")[0] + "_frames";
+      document.getElementById("status").innerText =
+        "✅ Video uploaded! Ready to pick frames.";
+      videoPlayer.src = URL.createObjectURL(file);
+      videoPlayer.onloadedmetadata = () => {
+        frameSlider.max = videoPlayer.duration;
+        frameSlider.step = 0.01;
+        frameSlider.value = 0;
+        precomputeSkeletons();
+      };
+    })
+    .catch((err) => {
+      document.getElementById("status").innerText = "❌ Upload failed.";
+      console.error(err);
+    });
 }
 
 frameSlider.addEventListener("input", () => {
@@ -123,24 +126,30 @@ function selectFrame() {
   }
   const currentStage = stages[currentStageIndex];
   const currentFrameTime = Math.floor(videoPlayer.currentTime * 10);
-  selectedFrames[currentStage] = `frame_${String(currentFrameTime).padStart(3, '0')}.jpg`;
+  selectedFrames[currentStage] =
+    `frame_${String(currentFrameTime).padStart(3, "0")}.jpg`;
 
   // ✅ Live update selected frames
-  document.getElementById("selectedFrames").innerHTML = 
-    '<h3>Selected Frames:</h3>' + 
-    Object.entries(selectedFrames).map(([stage, frame]) => `<p><b>${stage}</b>: ${frame}</p>`).join('');
+  document.getElementById("selectedFrames").innerHTML =
+    "<h3>Selected Frames:</h3>" +
+    Object.entries(selectedFrames)
+      .map(([stage, frame]) => `<p><b>${stage}</b>: ${frame}</p>`)
+      .join("");
 
   if (currentStageIndex < stages.length - 1) {
     currentStageIndex++;
-    document.getElementById("currentStageLabel").innerText = `Stage: ${stages[currentStageIndex]}`;
+    document.getElementById("currentStageLabel").innerText =
+      `Stage: ${stages[currentStageIndex]}`;
   } else {
-    document.getElementById("status").innerText = "✅ All frames selected. Now submit for feedback.";
-
+    document.getElementById("status").innerText =
+      "✅ All frames selected. Now submit for feedback.";
   }
 }
 
 function submitSelections() {
-  const feedbackButton = document.querySelector('button[onclick="submitSelections()"]');
+  const feedbackButton = document.querySelector(
+    'button[onclick="submitSelections()"]',
+  );
 
   if (!uploadedFilename) {
     alert("⚠️ Upload a video first!");
@@ -151,43 +160,47 @@ function submitSelections() {
     return;
   }
 
-  console.log('📤 Submitting directly to /pose:', { 
-    selectedReferenceName, 
-    selectedFrames 
+  console.log("📤 Submitting directly to /pose:", {
+    selectedReferenceName,
+    selectedFrames,
   });
 
   feedbackButton.disabled = true;
   feedbackButton.innerText = "Analyzing... ⏳";
-  document.getElementById("status").innerText = "🔍 Analyzing your technique...";
+  document.getElementById("status").innerText =
+    "🔍 Analyzing your technique...";
 
   fetch("/pose", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       folder_name: uploadedFilename,
       maneuver_name: selectedReferenceName,
-      frame_selections: selectedFrames
+      frame_selections: selectedFrames,
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.error) {
+        console.error("❌ Pose analysis error:", data.error);
+        document.getElementById("status").innerText =
+          "❌ Pose Analysis Failed: " + data.error;
+      } else {
+        console.log("✅ Pose analysis result:", data);
+        document.getElementById("status").innerText =
+          "✅ Pose Analysis Complete! Check console.";
+      }
     })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.error) {
-      console.error('❌ Pose analysis error:', data.error);
-      document.getElementById("status").innerText = "❌ Pose Analysis Failed: " + data.error;
-    } else {
-      console.log('✅ Pose analysis result:', data);
-      document.getElementById("status").innerText = "✅ Pose Analysis Complete! Check console.";
-    }
-  })
-  .catch(err => {
-    console.error('❌ Fetch error:', err);
-    document.getElementById("status").innerText = "❌ Failed to perform pose analysis.";
-  })
-  .finally(() => {
-    // ✅ Re-enable button after complete
-    feedbackButton.disabled = false;
-    feedbackButton.innerText = "✅ Get Feedback";
-  });
+    .catch((err) => {
+      console.error("❌ Fetch error:", err);
+      document.getElementById("status").innerText =
+        "❌ Failed to perform pose analysis.";
+    })
+    .finally(() => {
+      // ✅ Re-enable button after complete
+      feedbackButton.disabled = false;
+      feedbackButton.innerText = "✅ Get Feedback";
+    });
 }
 let poseLandmarks = null;
 let skeletonActive = false;
@@ -195,12 +208,12 @@ let skeletonActive = false;
 function checkIfReadyForSkeleton() {
   const overlay = document.getElementById("overlayCanvas");
   overlay.style.display = "block";
-  captureFrameAndAnalyze()
+  captureFrameAndAnalyze();
 }
 function captureFrameAndAnalyze() {
-  const nearestTime = Math.round(videoPlayer.currentTime * 10) / 10; 
+  const nearestTime = Math.round(videoPlayer.currentTime * 10) / 10;
   const landmarks = cachedSkeletons[nearestTime];
-  console.log("landmarks:", landmarks)
+  console.log("landmarks:", landmarks);
   if (landmarks) {
     drawSkeletonOnCanvas(landmarks);
     document.getElementById("poseWarning").style.display = "none";
@@ -208,7 +221,6 @@ function captureFrameAndAnalyze() {
     document.getElementById("poseWarning").style.display = "block";
   }
 }
-
 
 // ❌ Clear the overlay if no pose found
 function clearSkeleton() {
@@ -237,25 +249,23 @@ function playSlowMotion() {
     return;
   }
 
-  const frameTimes = Object.values(selectedFrames).map(name => {
+  const frameTimes = Object.values(selectedFrames).map((name) => {
     const num = parseInt(name.replace("frame_", "").replace(".jpg", ""));
-    return num / 10; 
+    return num / 10;
   });
 
   const minTime = Math.min(...frameTimes);
   const maxTime = Math.max(...frameTimes);
 
   videoPlayer.currentTime = minTime;
-  videoPlayer.playbackRate = 0.5; 
+  videoPlayer.playbackRate = 0.5;
   videoPlayer.play();
-
 }
 
-
-let cachedSkeletons = {}; 
+let cachedSkeletons = {};
 
 async function precomputeSkeletons() {
-  console.log('🚀 Triggered precompute');
+  console.log("🚀 Triggered precompute");
   const frameInterval = 0.1; // every 0.1 seconds
   const frames = [];
 
@@ -267,12 +277,13 @@ async function precomputeSkeletons() {
 
   for (const time of frames) {
     console.log(`⏳ Precomputing frame at ${time.toFixed(1)}s`);
-    
+
     videoPlayer.currentTime = time;
 
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       videoPlayer.onseeked = async () => {
-        setTimeout(async () => {  // ✅ ADD this setTimeout(0-100ms) small delay
+        setTimeout(async () => {
+          // ✅ ADD this setTimeout(0-100ms) small delay
           const canvas = document.createElement("canvas");
           canvas.width = videoPlayer.videoWidth;
           canvas.height = videoPlayer.videoHeight;
@@ -282,12 +293,12 @@ async function precomputeSkeletons() {
           const dataURL = canvas.toDataURL("image/jpeg");
 
           try {
-            const response = await fetch('/joints_preview', {
+            const response = await fetch("/joints_preview", {
               method: "POST",
               headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
               },
-              body: JSON.stringify({ image: dataURL })
+              body: JSON.stringify({ image: dataURL }),
             });
 
             const result = await response.json();
@@ -300,8 +311,8 @@ async function precomputeSkeletons() {
           } catch (err) {
             console.error(`❌ Error precomputing at ${time.toFixed(1)}s`, err);
           }
-          
-          resolve();  // ✅ Move resolve here AFTER timeout
+
+          resolve(); // ✅ Move resolve here AFTER timeout
         }, 100); // ✅ Give tiny 100ms delay after seek
       };
     });
@@ -312,16 +323,16 @@ async function precomputeSkeletons() {
 
   selectFrameBtn.disabled = false;
   frameSlider.disabled = false;
-  document.getElementById("status").innerText = "✅ Poses precomputed! Ready to pick frames.";
+  document.getElementById("status").innerText =
+    "✅ Poses precomputed! Ready to pick frames.";
 
   skeletonActive = true;
 }
 
-
 function drawSkeletonOnCanvas(landmarks) {
   console.log("🎯 Drawing skeleton with landmarks:", landmarks);
   const canvas = document.getElementById("overlayCanvas");
-  canvas.style.display = "block";  // ✅ Force it visible
+  canvas.style.display = "block"; // ✅ Force it visible
   canvas.width = videoPlayer.clientWidth;
   canvas.height = videoPlayer.clientHeight;
   const ctx = canvas.getContext("2d");
@@ -329,8 +340,8 @@ function drawSkeletonOnCanvas(landmarks) {
 
   console.log("Canvas size:", canvas.width, canvas.height);
 
-  ctx.fillStyle = "lime";   // Joint points
-  ctx.strokeStyle = "red";  // Bone connections
+  ctx.fillStyle = "lime"; // Joint points
+  ctx.strokeStyle = "red"; // Bone connections
   ctx.lineWidth = 2;
 
   const connections = [
@@ -355,8 +366,14 @@ function drawSkeletonOnCanvas(landmarks) {
   for (const [start, end] of connections) {
     if (landmarks[start] && landmarks[end]) {
       ctx.beginPath();
-      ctx.moveTo(landmarks[start][0] * canvas.width, landmarks[start][1] * canvas.height);
-      ctx.lineTo(landmarks[end][0] * canvas.width, landmarks[end][1] * canvas.height);
+      ctx.moveTo(
+        landmarks[start][0] * canvas.width,
+        landmarks[start][1] * canvas.height,
+      );
+      ctx.lineTo(
+        landmarks[end][0] * canvas.width,
+        landmarks[end][1] * canvas.height,
+      );
       ctx.stroke();
     }
   }
@@ -369,4 +386,3 @@ function drawSkeletonOnCanvas(landmarks) {
     ctx.fill();
   }
 }
-
