@@ -55,7 +55,10 @@
   <input type="range" id="frameSlider" min="0" max="100" value="0" style="width:800px;">
 
   <!-- Frame selection button, pose warning, submit button, etc... -->
+  <div style="display: flex; align-items: center; gap: 20px; margin-top: 10px;">
   <h3 id="currentStageLabel">Stage: (Select a maneuver/technique first)</h3>
+  <img id="proReferenceImage" src="" width="240" style="border-radius: 8px; display: none; border: 1px solid #aaa;">
+  </div>
   <button id="selectFrameBtn" onclick="selectFrame()">Select This Frame</button>
 
   <div id="poseWarning" style="display:none; color:orange; font-weight:bold;">

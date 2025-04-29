@@ -78,6 +78,7 @@ function selectReference(name, cardElement) {
     document.getElementById("currentStageLabel").innerText =
       `Stage: ${stages[currentStageIndex]}`;
     console.log("✅ Selected:", name, "Stages:", stages);
+    updateReferenceImage();
   } else {
     document.getElementById("currentStageLabel").innerText =
       "⚠️ No stages defined.";
@@ -145,9 +146,11 @@ function selectFrame() {
     currentStageIndex++;
     document.getElementById("currentStageLabel").innerText =
       `Stage: ${stages[currentStageIndex]}`;
+    updateReferenceImage(); // ✅ Show updated pro image for new stage
   } else {
     document.getElementById("status").innerText =
       "✅ All frames selected. Now submit for feedback.";
+    document.getElementById("proReferenceImage").style.display = "none"; // optional: hide image when done
   }
 }
 
@@ -390,4 +393,18 @@ function drawSkeletonOnCanvas(landmarks) {
     ctx.arc(x * canvas.width, y * canvas.height, 5, 0, 2 * Math.PI);
     ctx.fill();
   }
+}
+function updateReferenceImage() {
+  const stage = stages[currentStageIndex];
+  const maneuver = selectedReferenceName;
+
+  const imgElement = document.getElementById("proReferenceImage");
+  const imgPath = `/pro_image/${maneuver.toLowerCase()}/${stage}`;
+
+  imgElement.onerror = () => {
+    imgElement.style.display = "none";
+  };
+
+  imgElement.src = imgPath;
+  imgElement.style.display = "inline";
 }
