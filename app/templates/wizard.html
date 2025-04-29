@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SurfBuddy Wizard 🏄‍♂️</title>
+  <script src="{{ url_for('static', filename='script.js') }}?v={{ config['SESSION_UID'] }}" defer></script>
+  <style>
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      margin: 5px;
+      cursor: pointer;
+      width: 150px;
+      text-align: center;
+      background-color: #f8f8f8;
+    }
+    .card:hover {
+      background-color: #e0f7fa;
+    }
+    #maneuverCards, #techniqueCards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>SurfBuddy Coaching Wizard</h1>
+
+  <!-- Maneuvers and Techniques Selection -->
+  <h2>Surf Maneuvers 🏄‍♂️</h2>
+  <div id="maneuverCards"></div>
+
+  <h2>Surf Techniques 📚</h2>
+  <div id="techniqueCards"></div>
+
+  <!-- Optional Issue Description -->
+  <label for="issue">Describe your issue (optional):</label><br>
+  <textarea id="issue" rows="3" cols="50"></textarea>
+
+  <!-- Upload Video -->
+  <br><br>
+  <input type="file" id="videoFile" accept="video/*">
+  <button onclick="uploadVideo()">Upload Video</button>
+
+  <!-- Video + Skeleton Overlay -->
+  <div style="position: relative; width: 800px; height: 450px;">
+  <video id="videoPlayer" controls width="800" height="450" style="position: absolute; top: 0; left: 0;"></video>
+  <canvas id="overlayCanvas" width="800" height="450" style="position: absolute; top: 0; left: 0; pointer-events: none; display: none;"></canvas>
+  </div>
+
+  <!-- Slider for Frame Selection -->
+  <input type="range" id="frameSlider" min="0" max="100" value="0" style="width:800px;">
+
+  <!-- Frame selection button, pose warning, submit button, etc... -->
+  <h3 id="currentStageLabel">Stage: (Select a maneuver/technique first)</h3>
+  <button id="selectFrameBtn" onclick="selectFrame()">Select This Frame</button>
+
+  <div id="poseWarning" style="display:none; color:orange; font-weight:bold;">
+  ⚠️ Pose not detected reliably at this frame. Try picking another!
+  </div>
+  <button onclick="playSlowMotion()">🐢 Slo-Mo</button>
+  <br><br>
+  <button onclick="submitSelections()">✅ Get Feedback</button>
+
+  <h2 id="status"></h2>
+
+  <div id="selectedFrames" style="margin-top: 20px;"></div>
+
+</body>
+</html>

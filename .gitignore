@@ -1,0 +1,60 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+
+# Flask specific
+instance/
+uploads/
+*.db
+
+# PyCharm / VSCode project settings (optional)
+.idea/
+.vscode/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Build files
+build/
+dist/
+*.egg-info/
+
+# Cache
+*.cache
+.cache/
+__pypackages__/
+
+# Node/npm (in case you add frontend later)
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Media files
+*.mp4
+*.mov
+*.avi
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# SurfBuddy Specific
+backend/app/uploads/
+backend/app/uploads/*
+
+# Skeleton / joints overlays (if any temp frames)
+*_frames/
+
