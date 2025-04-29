@@ -221,9 +221,9 @@ function checkIfReadyForSkeleton() {
 function captureFrameAndAnalyze() {
   const nearestTime = Math.round(videoPlayer.currentTime * 10) / 10;
   const landmarks = cachedSkeletons[nearestTime];
-  console.log("landmarks:", landmarks);
+  console.log(`landmarks for time ${nearestTime}:`, landmarks);
+  maybeDrawSkeletonOnCanvas(landmarks);
   if (landmarks) {
-    drawSkeletonOnCanvas(landmarks);
     document.getElementById("poseWarning").style.display = "none";
   } else {
     document.getElementById("poseWarning").style.display = "block";
@@ -276,6 +276,7 @@ async function precomputeSkeletons() {
   console.log("🚀 Triggered precompute");
   const frameInterval = 0.1; // every 0.1 seconds
   const frames = [];
+  const originalOnSeeked = videoPlayer.onseeked;
 
   for (let t = 0; t <= videoPlayer.duration; t += frameInterval) {
     frames.push(t);
@@ -335,9 +336,10 @@ async function precomputeSkeletons() {
     "✅ Poses precomputed! Ready to pick frames.";
 
   skeletonActive = true;
+  videoPlayer.onseeked = originalOnSeeked;
 }
 
-function drawSkeletonOnCanvas(landmarks) {
+function maybeDrawSkeletonOnCanvas(landmarks) {
   console.log("🎯 Drawing skeleton with landmarks:", landmarks);
   const canvas = document.getElementById("overlayCanvas");
   canvas.style.display = "block"; // ✅ Force it visible
@@ -345,8 +347,12 @@ function drawSkeletonOnCanvas(landmarks) {
   canvas.height = videoPlayer.clientHeight;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   console.log("Canvas size:", canvas.width, canvas.height);
+
+  if (!landmarks) {
+    console.log("No landmarks, only cleared canvas.");
+    return;
+  }
 
   ctx.fillStyle = "lime"; // Joint points
   ctx.strokeStyle = "red"; // Bone connections
