@@ -42,11 +42,16 @@ window.onload = () => {
     }
   });
 
-  videoPlayer.addEventListener("timeupdate", () => {
+  function drawWhilePlaying() {
     if (skeletonActive) {
       captureFrameAndAnalyze();
     }
-  });
+    if (!videoPlayer.paused && !videoPlayer.ended) {
+      requestAnimationFrame(drawWhilePlaying);
+    }
+  }
+
+  videoPlayer.addEventListener("play", drawWhilePlaying);
 };
 
 function selectReference(name, cardElement) {
