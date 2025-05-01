@@ -1,6 +1,9 @@
 import os
 from flask import Blueprint, request, jsonify, current_app
 from app.services.pose_estimator import analyze_selected_frames_with_pro_reference
+from .coach_routes import get_maneuver_context
+from app.services.coaching_context import generate_coaching_context
+
 
 pose_bp = Blueprint('pose', __name__)
 
@@ -23,18 +26,17 @@ def analyze_pose():
         return jsonify({'error': 'No uploaded video found for UID.'}), 404
 
     video_path = os.path.join(upload_folder, video_files[0])
-
+    maneuver_context = get_maneuver_context(maneuver_name)
     try:
-        # ✅ Instead of looking for pre-extracted frames,
-        # dynamically extract the needed frames from video_path
         analysis_results = analyze_selected_frames_with_pro_reference(
             video_path=video_path,     # pass full video
             maneuver_name=maneuver_name,
             frame_selections=frame_selections
         )
+        feedback_summary = generate_coaching_context(analysis_results)
     except Exception as e:
         current_app.logger.error(f"Pose analysis failed: {e}")
         return jsonify({'error': f'Pose analysis failed: {e}'}), 500
 
-    return jsonify({'pose_analysis': analysis_results}), 200
+    return jsonify({'pose_analysis': analysis_results,'feedback_summary': feedback_summary,'manever_context' : maneuver_context}), 200
 

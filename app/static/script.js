@@ -156,7 +156,7 @@ function selectFrame() {
 
 function submitSelections() {
   const feedbackButton = document.querySelector(
-    'button[onclick="submitSelections()"]',
+    'button[onclick="submitSelections()"]'
   );
 
   if (!uploadedFilename) {
@@ -193,19 +193,47 @@ function submitSelections() {
         console.error("❌ Pose analysis error:", data.error);
         document.getElementById("status").innerText =
           "❌ Pose Analysis Failed: " + data.error;
-      } else {
-        console.log("✅ Pose analysis result:", data);
-        document.getElementById("status").innerText =
-          "✅ Pose Analysis Complete! Check console.";
+        return;
       }
+
+      console.log("✅ Pose analysis result:", data);
+      document.getElementById("status").innerText =
+        "✅ Pose Analysis Complete. Asking your AI Coach...";
+
+      latestPoseData = data;
+
+      // 👉 Now call /coach with the returned data
+      return fetch("/coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          maneuver_name: selectedReferenceName,
+          pose_analysis: data.pose_analysis,
+          feedback_summary: data.feedback_summary,
+          maneuver_context: data.manever_context,
+          user_message: "How did I do in this maneuver?"
+        }),
+      });
+    })
+    .then((res) => res.json())
+    .then((coachData) => {
+      if (coachData.error) {
+        console.error("❌ Coach error:", coachData.error);
+        document.getElementById("status").innerText =
+          "❌ Coach Error: " + coachData.error;
+        return;
+      }
+
+      // ✅ Show feedback in dialogue box
+      document.getElementById("coachResponse").innerText = coachData.llm_feedback;
+      document.getElementById("status").innerText = "🏄‍♂️ Surf Coach responded!";
     })
     .catch((err) => {
-      console.error("❌ Fetch error:", err);
+      console.error("❌ Unexpected error:", err);
       document.getElementById("status").innerText =
-        "❌ Failed to perform pose analysis.";
+        "❌ Unexpected error while asking coach.";
     })
     .finally(() => {
-      // ✅ Re-enable button after complete
       feedbackButton.disabled = false;
       feedbackButton.innerText = "✅ Get Feedback";
     });
@@ -408,3 +436,45 @@ function updateReferenceImage() {
   imgElement.src = imgPath;
   imgElement.style.display = "inline";
 }
+
+function sendMessageToCoach() {
+  const input = document.getElementById("userChatInput");
+  const userMessage = input.value.trim();
+  const chatHistory = document.getElementById("chatHistory");
+
+  if (!userMessage) return;
+
+  // Add user message to chat
+  chatHistory.innerHTML += `<div><strong>You:</strong> ${userMessage}</div>`;
+
+  fetch("/coach", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      maneuver_name: selectedReferenceName,
+      pose_analysis: latestPoseData.pose_analysis,
+      feedback_summary: latestPoseData.feedback_summary,
+      maneuver_context: latestPoseData.manever_context,
+      user_message: userMessage,
+    }),
+  })
+    .then((res) => res.json())
+    .then((coachData) => {
+      console.log("🔁 Coach Response:", coachData);
+
+      if (coachData.error) {
+        document.getElementById("status").innerText =
+          "❌ Coach Error: " + coachData.error;
+        return;
+      }
+
+      chatHistory.innerHTML += `<div><strong>Coach:</strong> ${coachData.llm_feedback}</div>`;
+      input.value = "";
+    })
+    .catch((err) => {
+      console.error("❌ Unexpected error while asking coach:", err);
+      document.getElementById("status").innerText =
+        "❌ Unexpected error while asking coach.";
+    });
+}
+

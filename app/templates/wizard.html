@@ -69,6 +69,13 @@
   <button onclick="submitSelections()">✅ Get Feedback</button>
 
   <h2 id="status"></h2>
+  <div id="chatBox" style="margin-top: 30px;">
+  <h3>🏄 AI Surf Coach</h3>
+  <div id="chatHistory" style="border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: scroll;"></div>
+  <input type="text" id="userChatInput" placeholder="Ask your coach something..." style="width: 80%;">
+  <div id="coachResponse" style="margin-top: 20px; font-weight: bold;"></div>
+  <button onclick="sendMessageToCoach()">Send</button>
+  </div>
 
   <div id="selectedFrames" style="margin-top: 20px;"></div>
 
